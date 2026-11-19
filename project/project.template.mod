@@ -48,6 +48,7 @@ subject to {
     
     // Constraint 2: Minimum Run Length
     
+    
     forall(i in 2..N) {
       
       ((1 - R[i-1]) + R[i] == 0) => S[i-1] >= L;
@@ -70,11 +71,11 @@ subject to {
 	  
 	  // If in the i-1 has the machine maintains the same state in i, then S[i] = S[i-1] + 1
 	  (R[i] + R[i-1] - 1 >= 1) => S[i] == S[i-1] + 1;
-	  ((1 - R[i]) + (1 - R[i-1]) - 1 >= 1) => S[i] == S[i-1] + 1;
+	  //((1 - R[i]) + (1 - R[i-1]) - 1 >= 1) => S[i] == S[i-1] + 1;
 	  
 	  // If the machine changes state, then we must set S[i] = 1
 	  (R[i] + (1 - R[i-1]) - 1 >= 1) => S[i] == 1;
-	  ((1 - R[i]) + R[i-1] - 1 >= 1) => S[i] == 1;
+	  //((1 - R[i]) + R[i-1] - 1 >= 1) => S[i] == 1;
 	  
     }
     
