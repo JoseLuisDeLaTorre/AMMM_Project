@@ -1,7 +1,7 @@
 instancesDirectory = output;
 fileNamePrefix = test_gen;
 fileNameExtension = dat;
-numInstances = 100;
+numInstances = 1;
 
 N = 6;
 
