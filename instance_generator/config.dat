@@ -1,0 +1,12 @@
+instancesDirectory = output;
+fileNamePrefix = test_gen;
+fileNameExtension = dat;
+numInstances = 100;
+
+N = 6;
+
+minProfitPerInstance = 1;
+maxProfitPerInstance = 10;
+
+minEnergyPerInstance = 1;
+maxEnergyPerInstance = 10;
