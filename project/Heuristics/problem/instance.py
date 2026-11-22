@@ -17,57 +17,95 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from Heuristics.problem.Task import Task
-from Heuristics.problem.CPU import CPU
+
 from Heuristics.problem.solution import Solution
+
+from Heuristics.problem.TimePeriod import TimePeriod
 
 
 class Instance(object):
     def __init__(self, config, inputData):
         self.config = config
         self.inputData = inputData
-        nTasks = inputData.nTasks
-        nCPUs = inputData.nCPUs
-        rt = inputData.rt
-        self.rc = inputData.rc
+        self.L = 3
+        self.U = 4
+        self.T = 1
+        
+        nTimes =  10  #inputData.nTimes
 
-        self.tasks = [None] * nTasks  # vector with tasks
-        for tId in range(0, nTasks):  # tId = 0..(nTasks-1)
-            self.tasks[tId] = Task(tId, rt[tId])
+        P = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        E = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 
-        self.cpus = [None] * nCPUs  # vector with cpus
-        for cId in range(0, nCPUs):  # cId = 0..(nCPUs-1)
-            self.cpus[cId] = CPU(cId, self.rc[cId])
+        self.timePeriods = [None] * nTimes
+        for tId in range(0, nTimes):
+            self.timePeriods[tId] = TimePeriod(tId, 0, E[tId], P[tId])
 
-    def getNumTasks(self):
-        return len(self.tasks)
 
-    def getNumCPUs(self):
-        return len(self.cpus)
+    def getNumTimePeriods(self):
+        return len(self.timePeriods)        
 
-    def getTasks(self):
-        return self.tasks
-
-    def getCPUs(self):
-        return self.cpus
+    def getTimePeriods(self):
+        return self.timePeriods
 
     def createSolution(self):
-        solution = Solution(self.tasks, self.cpus, self.rc)
+        solution = Solution(self.timePeriods)
         solution.setVerbose(self.config.verbose)
         return solution
 
+    #MAX energy, set as true the periods that uses less energy
     def checkInstance(self):
-        totalCapacityCPUs = 0.0
-        maxCPUCapacity = 0.0
-        for cpu in self.cpus:
-            capacity = cpu.getTotalCapacity()
-            totalCapacityCPUs += capacity
-            maxCPUCapacity = max(maxCPUCapacity, capacity)
 
-        totalResourcesTasks = 0.0
-        for task in self.tasks:
-            resources = task.getTotalResources()
-            totalResourcesTasks += resources
-            if resources > maxCPUCapacity: return False
+        profit = 0.0
+        
+        for i in self.timePeriods:
+            profit += i.getProfit()
 
-        return totalCapacityCPUs >= totalResourcesTasks
+        # Max profit can be reached
+        cond0 = profit >= self.T
+
+        # N is more than L and U
+        cond1 = self.getNumTimePeriods() >= self.L and self.getNumTimePeriods() >= self.U
+
+        # U is more than or equal to L
+        cond2 = self.U >= self.L
+
+        print('cond0: %s, cond1: %s, cond2: %s' % (str(cond0), str(cond1), str(cond2)))
+
+        return cond0 and cond1 and cond2
+
+           
+"""
+maxLengthChain = 0.0  #consecutives ON
+minLengthChain = 0.0  #consecutives OFF
+for i in self.timePeriods:
+    profit += i.getProfit()
+    energy += i.getEnergy()
+    for j in self.timePeriods:
+        currentMaxLengthChain = 0.0
+        currentMinLengthChain = 0.0
+        if i.getId() < j.getId():
+            if i.getStatus() == 1 and j.getStatus() == 1:
+                currentMaxLengthChain += 1
+            elif i.getStatus() == 0 and j.getStatus() == 0:
+                currentMinLengthChain += 1
+        if currentMaxLengthChain > maxLengthChain:
+            maxLengthChain = currentMaxLengthChain
+        if currentMinLengthChain > minLengthChain:
+            minLengthChain = currentMinLengthChain
+
+            
+# Cannot be turned off without having L consecutive periods
+if minLengthChain < self.L:
+    return False
+
+# Cannot be on more than U consecutive periods
+if maxLengthChain > self.U:
+    return False
+
+# Minimum profit treshold T must be reached
+if profit < self.T:
+    return False
+
+# Must end being turned off
+if self.timePeriods[self.getNumTimePeriods()-1].getStatus() != 0:
+    return False """

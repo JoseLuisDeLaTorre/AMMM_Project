@@ -17,137 +17,151 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import copy
 from Heuristics.solution import _Solution
 
 
 # This class stores the load of the highest loaded CPU
 # when a task is assigned to a CPU.
 class Assignment(object):
-    def __init__(self, taskId, cpuId, highestLoad):
-        self.taskId = taskId
-        self.cpuId = cpuId
-        self.highestLoad = highestLoad
+    def __init__(self, timeId, status, energy):
+        self.timeId = timeId
+        self.status = status
+        self.energy = energy
 
     def __str__(self):
-        return "<t_%d, c_%d>: highestLoad: %.2f%%" % (self.taskId, self.cpuId, self.highestLoad*100)
+        return "<time_%d, status_%d>: energy: %.2f" % (
+            self.timeId,
+            self.status,
+            self.energy,
+        )
 
 
-# Solution includes functions to manage the solution, to perform feasibility
-# checks and to dump the solution into a string or file.
 class Solution(_Solution):
-    def __init__(self, tasks, cpus, capacityPerCPUId):
-        self.tasks = tasks
-        self.cpus = cpus
-        self.taskIdToCPUId = {}  # hash table: task Id => CPU Id
-        self.cpuIdToListTaskId = {}  # hash table: CPU Id => list<task Id>
-        # vector of available capacities per CPU initialized as a copy of maxCapacityPerCPUId vector.
-        self.availCapacityPerCPUId = copy.deepcopy(capacityPerCPUId)
-        # vector of loads per CPU (nCPUs entries initialized to 0.0) 
-        self.loadPerCPUId = [0.0] * len(cpus)
+    def __init__(self, timePeriods, minimumOnPeriods=3, maximumOnPeriods=4,
+                 minimumProfit=1):
+        self.timePeriods = timePeriods
+        self.L = minimumOnPeriods
+        self.U = maximumOnPeriods
+        self.T = minimumProfit
+        # Vector of states
+        self.statuses = [timePeriod.getStatus() for timePeriod in timePeriods]
         super().__init__()
 
-    def updateHighestLoad(self):
+    # ON_i is one when the machine changes from OFF to ON
+    def getTurnedOn(self):
+        turnedOn = []
+        for i in range(0, len(self.statuses)):
+            if i == 0:
+                turnedOn.append(self.statuses[i])
+            else:
+                turnedOn.append(max(0, self.statuses[i] - self.statuses[i - 1]))
+        return turnedOn
+
+    # Check all the restrictions for the current assignment of time periods
+    def isAssignmentFeasible(self):
+        if any(status not in (0, 1) for status in self.statuses):
+            return False
+
+        # Check profit threshold
+        profit = 0.0
+        for i in range(0, len(self.timePeriods)):
+            profit += self.timePeriods[i].getProfit() * self.statuses[i]
+        if profit < self.T:
+            return False
+
+        # Check run length (max and min) to respect L and U params
+        # The idea is iterate over time periods keeping the count of the current consecutive ON,
+        # and in each iteration check if the runLength is valid for the min and the max lenghts.
+        runLength = 0
+        for status in self.statuses + [0]:
+            if status:
+                runLength += 1
+                if runLength > self.U:
+                    return False
+            elif runLength:
+                if runLength < self.L:
+                    return False
+                runLength = 0
+
+        return True
+
+    # Objective function: minimize the total energy used
+    def updateObjective(self):
         self.fitness = 0.0
-        for cpu in self.cpus:
-            cpuId = cpu.getId()
-            totalCapacity = cpu.getTotalCapacity()
-            usedCapacity = totalCapacity - self.availCapacityPerCPUId[cpuId]
-            load = usedCapacity / totalCapacity
-            self.loadPerCPUId[cpuId] = load
-            self.fitness = max(self.fitness, load)
+        for i in range(0, len(self.timePeriods)):
+            self.fitness += self.timePeriods[i].getEnergy() * self.statuses[i]
 
-    def isFeasibleToAssignTaskToCPU(self, taskId, cpuId):
-        if taskId in self.taskIdToCPUId:
+    # Kept as an alias for the original solution interface
+    #def updateHighestRatio(self):
+    #    self.updateObjective()
+
+    # Check if is out of bounds, then check previous state
+    # 
+    def isFeasibleToSetTimeON(self, timeId):
+        if not 0 <= timeId < len(self.statuses):
             return False
+        previousStatus = self.statuses[timeId]
+        self.statuses[timeId] = 1
+        feasible = self.isAssignmentFeasible()
+        self.statuses[timeId] = previousStatus
+        return feasible
 
-        if self.availCapacityPerCPUId[cpuId] < self.tasks[taskId].getTotalResources():
+    def isFeasibleToAssignOFF(self, timeId):
+        if not 0 <= timeId < len(self.statuses):
             return False
+        previousStatus = self.statuses[timeId]
+        self.statuses[timeId] = 0
+        feasible = self.isAssignmentFeasible()
+        self.statuses[timeId] = previousStatus
+        return feasible
 
+    def assign(self, timeId, status=1):
+        if not 0 <= timeId < len(self.statuses) or status not in (0, 1):
+            return False
+        self.statuses[timeId] = status
+        self.updateObjective()
         return True
 
-    def isFeasibleToUnassignTaskFromCPU(self, taskId, cpuId):
-        if taskId not in self.taskIdToCPUId: return False
-        if cpuId not in self.cpuIdToListTaskId: return False
-        if taskId not in self.cpuIdToListTaskId[cpuId]: return False
-        return True
+    def unassign(self, timeId):
+        return self.assign(timeId, 0)
 
-    def getCPUIdAssignedToTaskId(self, taskId):
-        if taskId not in self.taskIdToCPUId: return None
-        return self.taskIdToCPUId[taskId]
-
-    def assign(self, taskId, cpuId):
-        if not self.isFeasibleToAssignTaskToCPU(taskId, cpuId):return False
-
-        self.taskIdToCPUId[taskId] = cpuId
-        if cpuId not in self.cpuIdToListTaskId: self.cpuIdToListTaskId[cpuId] = []
-        self.cpuIdToListTaskId[cpuId].append(taskId)
-        self.availCapacityPerCPUId[cpuId] -= self.tasks[taskId].getTotalResources()
-
-        self.updateHighestLoad()
-        return True
-
-    def unassign(self, taskId, cpuId):
-        if not self.isFeasibleToUnassignTaskFromCPU(taskId, cpuId): return False
-
-        del self.taskIdToCPUId[taskId]
-        self.cpuIdToListTaskId[cpuId].remove(taskId)
-        self.availCapacityPerCPUId[cpuId] += self.tasks[taskId].getTotalResources()
-
-        self.updateHighestLoad()
-        return True
-
-    def findFeasibleAssignments(self, taskId):
+    def findFeasibleAssignments(self, timeId):
         feasibleAssignments = []
-        for cpu in self.cpus:
-            cpuId = cpu.getId()
-            feasible = self.assign(taskId, cpuId)
-            if not feasible: continue
-            assignment = Assignment(taskId, cpuId, self.fitness)
-            feasibleAssignments.append(assignment)
-
-            self.unassign(taskId, cpuId)
-
+        previousStatus = self.statuses[timeId]
+        for status in (0, 1):
+            self.statuses[timeId] = status
+            if self.isAssignmentFeasible():
+                energy = self.timePeriods[timeId].getEnergy() * status
+                feasibleAssignments.append(Assignment(timeId, status, energy))
+        self.statuses[timeId] = previousStatus
         return feasibleAssignments
 
-    def findBestFeasibleAssignment(self, taskId):
-        bestAssignment = Assignment(taskId, None, float('infinity'))
-        for cpu in self.cpus:
-            cpuId = cpu.getId()
-            feasible = self.assign(taskId, cpuId)
-            if not feasible: continue
+    def findBestFeasibleAssignment(self, timeId):
+        assignments = self.findFeasibleAssignments(timeId)
+        if not assignments:
+            return None
 
-            curHighestLoad = self.fitness
-            if bestAssignment.highestLoad > curHighestLoad:
-                bestAssignment.cpuId = cpuId
-                bestAssignment.highestLoad = curHighestLoad
-
-            self.unassign(taskId, cpuId)
-
+        bestAssignment = assignments[0]
+        for assignment in assignments[1:]:
+            if assignment.energy < bestAssignment.energy:
+                bestAssignment = assignment
         return bestAssignment
 
     def __str__(self):
         strSolution = 'z = %10.8f;\n' % self.fitness
         if self.fitness == float('inf'): return strSolution
 
-        # Xtc: decision variable containing the assignment of tasks to CPUs
-        # pre-fill with no assignments (all-zeros)
-        xtc = []
-        for t in range(0, len(self.tasks)):  # t = 0..(nTasks-1)
-            xtcEntry = [0] * len(self.cpus)  # results in a vector of 0's with nCPUs elements
-            xtc.append(xtcEntry)
+        # S: decision variable containing the status of the machine
+        statuses = self.statuses
+        # ON: decision variable containing the periods where the machine is turned on
+        turnedOn = self.getTurnedOn()
 
-        # iterate over hash table taskIdToCPUId and fill in xtc
-        for taskId, cpuId in self.taskIdToCPUId.items():
-            xtc[taskId][cpuId] = 1
-
-        strSolution += 'xtc = [\n'
-        for xtcEntry in xtc:
-            strSolution += '\t[ '
-            for xtcValue in xtcEntry:
-                strSolution += str(xtcValue) + ' '
-            strSolution += ']\n'
-        strSolution += '];\n'
+        strSolution += 's = [ '
+        strSolution += ' '.join(str(status) for status in statuses)
+        strSolution += ' ];\n'
+        strSolution += 'on = [ '
+        strSolution += ' '.join(str(status) for status in turnedOn)
+        strSolution += ' ];\n'
 
         return strSolution
 

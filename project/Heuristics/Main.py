@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from argparse import ArgumentParser
 from pathlib import Path
+import os
 
 import sys
 
@@ -42,8 +43,11 @@ class Main:
             if self.config.verbose: print('Creating Problem Instance...')
             instance = Instance(self.config, data)
             if self.config.verbose: print('Solving the Problem...')
+
             if instance.checkInstance():
                 initialSolution = None
+                solver = Solver_Greedy(self.config, instance)
+                """                 
                 if self.config.solver == 'Greedy' or self.config.solver == 'Random':
                     solver = Solver_Greedy(self.config, instance)
                 elif self.config.solver == 'GRASP':
@@ -57,7 +61,8 @@ class Main:
                     decoder = Decoder(self.config, instance)
                     solver = Solver_BRKGA(decoder, instance)
                 else:
-                    raise AMMMException('Solver %s not supported.' % str(self.config.solver))
+                    raise AMMMException('Solver %s not supported.' % str(self.config.solver)) 
+                """
                 solution = solver.solve(solution=initialSolution)
                 print('Solution (CPUid: [TasksId]): %s' % str(solution.cpuIdToListTaskId))
                 solution.saveToFile(self.config.solutionFile)
@@ -65,7 +70,7 @@ class Main:
                 print('Instance is infeasible.')
                 solution = instance.createSolution()
                 solution.makeInfeasible()
-                solution.saveToFile(self.config.solutionFile)
+                solution.saveToFile(self.config.solutionFile) 
             return 0
         except AMMMException as e:
             print('Exception:', e)
@@ -77,6 +82,11 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--configFile', nargs='?', type=Path,
                         default=Path(__file__).parent / 'config/config.dat', help='specifies the config file')
     args = parser.parse_args()
+
+    print('Reading config file %s' % args.configFile)
+
+  
+    print( os.path.exists(args.configFile) )
 
     config = DATParser.parse(args.configFile)
     ValidateConfig.validate(config)
