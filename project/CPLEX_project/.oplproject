@@ -4,12 +4,41 @@
     	
     <configs>
         		
-        <config default="true" name="test-checker" category="opl">
+        <config default="false" name="small" category="opl">
             			
             <ref name="sol_alt.mod" type="model">
 			</ref>
             			
-            <ref name="project.1.dat" type="data">
+            <ref name="data/small_0.dat" type="data">
+			</ref>
+            			
+            <ref name="config.ops" type="setting">
+			</ref>
+            		
+        </config>
+        		
+        <config default="true" name="mid" category="opl">
+            			
+            <ref name="sol_alt.mod" type="model">
+			</ref>
+            			
+            <ref name="data/mid_0.dat" type="data">
+			</ref>
+            			
+            <ref name="config.ops" type="setting">
+			</ref>
+            		
+        </config>
+        		
+        <config default="false" name="big" category="opl">
+            			
+            <ref name="sol_alt.mod" type="model">
+			</ref>
+            			
+            <ref name="data/big_0.dat" type="data">
+			</ref>
+            			
+            <ref name="config.ops" type="setting">
 			</ref>
             		
         </config>

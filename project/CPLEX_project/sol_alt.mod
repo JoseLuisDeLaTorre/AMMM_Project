@@ -88,7 +88,7 @@ execute {
 
 //>>>>>>>>>>>>>>>>
 	
-	var file = new IloOplOutputFile("output.sol");
+	var file = new IloOplOutputFile("./outputs/output"+N+".sol");
 	var start = 0;
 	
 	
