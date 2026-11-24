@@ -9,10 +9,10 @@
             <ref name="sol_alt.mod" type="model">
 			</ref>
             			
-            <ref name="data/small_0.dat" type="data">
+            <ref name="config.ops" type="setting">
 			</ref>
             			
-            <ref name="config.ops" type="setting">
+            <ref name="data/small_0.dat" type="data">
 			</ref>
             		
         </config>
@@ -22,10 +22,10 @@
             <ref name="sol_alt.mod" type="model">
 			</ref>
             			
-            <ref name="data/mid_0.dat" type="data">
+            <ref name="config.ops" type="setting">
 			</ref>
             			
-            <ref name="config.ops" type="setting">
+            <ref name="data/mid_0.dat" type="data">
 			</ref>
             		
         </config>
@@ -35,10 +35,36 @@
             <ref name="sol_alt.mod" type="model">
 			</ref>
             			
+            <ref name="config.ops" type="setting">
+			</ref>
+            			
             <ref name="data/big_0.dat" type="data">
+			</ref>
+            		
+        </config>
+        		
+        <config default="false" name="small_mid" category="opl">
+            			
+            <ref name="config.ops" type="setting">
+			</ref>
+            			
+            <ref name="sol_alt.mod" type="model">
+			</ref>
+            			
+            <ref name="data/small_mid_0.dat" type="data">
+			</ref>
+            		
+        </config>
+        		
+        <config default="false" name="huge" category="opl">
+            			
+            <ref name="sol_alt.mod" type="model">
 			</ref>
             			
             <ref name="config.ops" type="setting">
+			</ref>
+            			
+            <ref name="data/huge_onlyN_0.dat" type="data">
 			</ref>
             		
         </config>
