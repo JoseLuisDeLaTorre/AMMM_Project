@@ -27,38 +27,44 @@ class Solver_Greedy(_Solver):
 
     def _selectCandidate(self, candidateList):
         if self.config.solver == 'Greedy':
-            # sort candidate assignments by highestLoad in ascending order
-            sortedCandidateList = sorted(candidateList, key=lambda x: x.highestLoad)
-            # choose assignment with minimum highest load
-            return sortedCandidateList[0]
+            return min(candidateList, key=lambda candidate: candidate.energy)
         return random.choice(candidateList)
 
     def construction(self):
-        # get an empty solution for the problem
         solution = self.instance.createSolution()
+        timePeriods = self.instance.getTimePeriods()
 
-        # get tasks and sort them by their total required resources in descending order
-        tasks = self.instance.getTasks()
-        sortedTasks = sorted(tasks, key=lambda t: t.getTotalResources(), reverse=True)
+        timeId = 0
+        while timeId < len(timePeriods):
+            print("TIME ID --------------------", timeId)
+            currentProfit = sum(
+                period.getProfit() * solution.statuses[index]
+                for index, period in enumerate(timePeriods)
+            )
+            """
+                                     if currentProfit >= solution.T:
+                break """
 
+            candidateList = solution.findFeasibleAssignments(timeId)
 
-        # for each task taken in sorted order
-        for task in sortedTasks:
-            taskId = task.getId()
-
-            # compute feasible assignments
-            candidateList = solution.findFeasibleAssignments(taskId)
-
-            # no candidate assignments => no feasible assignment found
+            print(f"TimeId: {timeId}, CurrentProfit: {currentProfit}, CandidateList: {candidateList}")
             if not candidateList:
-                solution.makeInfeasible()
-                break
+                if not solution.assign(timeId, 0):
+                    raise RuntimeError("Could not leave the current period OFF")
+                timeId += 1
+                continue
 
-            # select assignment
             candidate = self._selectCandidate(candidateList)
+            if not solution.assign(
+                startTime=candidate.startTime,
+                endTime=candidate.endTime,
+                status=candidate.status,
+            ):
+                raise RuntimeError("Could not apply the selected assignment")
+            timeId = candidate.endTime
 
-            # assign the current task to the CPU that resulted in a minimum highest load
-            solution.assign(taskId, candidate.cpuId)
+        if not solution.isAssignmentFeasible():
+            solution.makeInfeasible()
 
         return solution
 

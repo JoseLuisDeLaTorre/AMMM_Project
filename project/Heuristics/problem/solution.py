@@ -23,17 +23,16 @@ from Heuristics.solution import _Solution
 # This class stores the load of the highest loaded CPU
 # when a task is assigned to a CPU.
 class Assignment(object):
-    def __init__(self, timeId, status, energy):
-        self.timeId = timeId
-        self.status = status
+    def __init__(self, initialTimeId, endTimeId, energy,profit,rate, status=0):
+        self.startTime = initialTimeId
+        self.endTime = endTimeId
         self.energy = energy
+        self.status = status
+        self.profit = profit
+        self.rate = rate
 
     def __str__(self):
-        return "<time_%d, status_%d>: energy: %.2f" % (
-            self.timeId,
-            self.status,
-            self.energy,
-        )
+        return f"Assignment(startTime={self.startTime}, endTime={self.endTime}, energy={self.energy}, status={self.status}, profit={self.profit}, rate={self.rate})"
 
 
 class Solution(_Solution):
@@ -59,16 +58,16 @@ class Solution(_Solution):
 
     # Check all the restrictions for the current assignment of time periods
     def isAssignmentFeasible(self):
-        if any(status not in (0, 1) for status in self.statuses):
-            return False
-
         # Check profit threshold
+        """  We cannot determinate the real profit yet, just at the end of the solution, maybe we can start all with 1
+        and then check if the profit is enough, this can be a future improvement.
         profit = 0.0
         for i in range(0, len(self.timePeriods)):
             profit += self.timePeriods[i].getProfit() * self.statuses[i]
         if profit < self.T:
-            return False
-
+            return False 
+        """
+        
         # Check run length (max and min) to respect L and U params
         # The idea is iterate over time periods keeping the count of the current consecutive ON,
         # and in each iteration check if the runLength is valid for the min and the max lenghts.
@@ -76,10 +75,12 @@ class Solution(_Solution):
         for status in self.statuses + [0]:
             if status:
                 runLength += 1
-                if runLength > self.U:
+                if runLength >= self.U:
+                    print("Run length exceeded maximum limit")
                     return False
             elif runLength:
                 if runLength < self.L:
+                    print("Run length below minimum limit")
                     return False
                 runLength = 0
 
@@ -99,17 +100,20 @@ class Solution(_Solution):
     # 
 
     def isOnChainFeasible(self, initialTimeId, finalTimeId):
+        print("CHECKING FEASIBILITY: ", initialTimeId, finalTimeId)
         # save initial states 
         statesBackup = self.statuses[initialTimeId:finalTimeId]
         validation = True
         for timeId in range(initialTimeId, finalTimeId):
-            if not self.isFeasibleToSetTimeON(timeId):
-                validation = False
-                break
             self.statuses[timeId] = 1
+
+        
+        feasible = self.isAssignmentFeasible()
+        print("STATUSES AFTER ASSIGNING ON: ", self.statuses, "FEASIBLE: ", feasible)
+        print("----")
         #revert changes
         self.statuses[initialTimeId:finalTimeId] = statesBackup
-        return validation
+        return feasible
 
 
     def isFeasibleToSetTimeON(self, timeId):
@@ -130,10 +134,11 @@ class Solution(_Solution):
         self.statuses[timeId] = previousStatus
         return feasible
 
-    def assign(self, timeId, status=1):
-        if not 0 <= timeId < len(self.statuses) or status not in (0, 1):
+    def assign(self, startTime, endTime, status=1):
+        if endTime > len(self.statuses):
             return False
-        self.statuses[timeId] = status
+        for timeId in range(startTime, endTime):
+            self.statuses[timeId] = status
         self.updateObjective()
         return True
 
@@ -142,52 +147,31 @@ class Solution(_Solution):
 
     def findFeasibleAssignments(self, timeId):
         feasibleAssignments = []
-        # The comparison will be done using a windows frame between 
-        # min L and max U
-        # S0, S1 ... SL
-        # ...
-        # S0 S1 ... SU
-        # S1 S2 ... SU
-        # All this will be evaluated as feasible in the iteration, next time
-        # will start at time i + k, being k the last time frime of the selected window
-
-        timeBlocks = []
-        timeEnergies = []
-        timeProfits = []
-        timeRatio = []
-
-
-        for l in range(0, self.L  ):
+        print(f"Finding feasible assignments for timeId: {timeId}")
+        save_statuses = self.statuses.copy()
+        for l in range(0, self.L):
             for u in range(self.L , self.L + self.U ):
-                if timeId+u < len(self.statuses)+1:
-
-                    timeBlocks.append((timeId+l, timeId+u))
-                    timeEnergies.append(sum(self.timePeriods[t].getEnergy() for t in range(timeId+l, timeId+u)))
-                    timeProfits.append(sum(self.timePeriods[t].getProfit() for t in range(timeId+l, timeId+u)))
-                    timeRatio.append(timeEnergies[-1]/timeProfits[-1] if timeProfits[-1] > 0 else float('inf'))
+                print(f"Checking range: {timeId+l} to {timeId+u}")
+                if timeId+u < len(self.statuses)+1:       
                     if self.isOnChainFeasible(timeId+l, timeId+u):
+                        energy = 0
+                        profit = 0
+                        rate = 0
                         #Assign all the status from timeId+l to timeId+u as ON
                         for t in range(timeId+l, timeId+u):
                             self.statuses[t] = 1
-                            energy = self.timePeriods[t].getEnergy()
-                            #profit = self.timePeriods[t].getProfit()
-                            feasibleAssignments.append(Assignment(t, 1, energy))
+                            energy += self.timePeriods[t].getEnergy()
+                            profit += self.timePeriods[t].getProfit()
+                        #Calculate the energy/profit ratio
 
+                        if profit > 0:
+                            rate = energy / profit
+                        print("Energy",energy, profit, rate)
+                        feasibleAssignments.append(Assignment(timeId+l, timeId+u, energy, profit, rate,1))
 
                         #Unassign all the status from timeId+l to timeId+u as OFF
                         for t in range(timeId+l, timeId+u):
                             self.statuses[t] = 0
-
-        print("Time blocks:", timeBlocks)
-        print("Time energies:", timeEnergies)
-        print("Time profits:", timeProfits)
-        print("Time ratio:", timeRatio)
-        """         for status in (0, 1):
-            self.statuses[timeId] = status
-            if self.isAssignmentFeasible():
-                energy = self.timePeriods[timeId].getEnergy() * status
-                feasibleAssignments.append(Assignment(timeId, status, energy))
-        self.statuses[timeId] = previousStatus """
         return feasibleAssignments
 
     def findBestFeasibleAssignment(self, timeId):

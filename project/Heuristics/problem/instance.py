@@ -73,39 +73,4 @@ class Instance(object):
 
         return cond0 and cond1 and cond2
 
-           
-"""
-maxLengthChain = 0.0  #consecutives ON
-minLengthChain = 0.0  #consecutives OFF
-for i in self.timePeriods:
-    profit += i.getProfit()
-    energy += i.getEnergy()
-    for j in self.timePeriods:
-        currentMaxLengthChain = 0.0
-        currentMinLengthChain = 0.0
-        if i.getId() < j.getId():
-            if i.getStatus() == 1 and j.getStatus() == 1:
-                currentMaxLengthChain += 1
-            elif i.getStatus() == 0 and j.getStatus() == 0:
-                currentMinLengthChain += 1
-        if currentMaxLengthChain > maxLengthChain:
-            maxLengthChain = currentMaxLengthChain
-        if currentMinLengthChain > minLengthChain:
-            minLengthChain = currentMinLengthChain
-
-            
-# Cannot be turned off without having L consecutive periods
-if minLengthChain < self.L:
-    return False
-
-# Cannot be on more than U consecutive periods
-if maxLengthChain > self.U:
-    return False
-
-# Minimum profit treshold T must be reached
-if profit < self.T:
-    return False
-
-# Must end being turned off
-if self.timePeriods[self.getNumTimePeriods()-1].getStatus() != 0:
-    return False """
+  
