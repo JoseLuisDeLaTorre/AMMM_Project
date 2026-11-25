@@ -44,18 +44,18 @@ class Solver_Greedy(_Solver):
             candidateList = solution.findFeasibleAssignments(timeId)
 
             if not candidateList:
-                print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}: no candidate")
+                # print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}: no candidate")
                 if not solution.assign(timeId, 0):
                     raise RuntimeError("Could not leave the current period OFF")
                 timeId += 1
                 continue
 
             candidate = self._selectCandidate(candidateList)
-            print(
-                f"t={timeId} profit={currentProfit:g}/{solution.T:g}: "
-                f"assign [{candidate.startTime}, {candidate.endTime}) "
-                f"rate={candidate.rate:.3g}"
-            )
+            # print(
+            #     f"t={timeId} profit={currentProfit:g}/{solution.T:g}: "
+            #     f"assign [{candidate.startTime}, {candidate.endTime}) "
+            #     f"rate={candidate.rate:.3g}"
+            # )
             if not solution.assign(
                 startTime=candidate.startTime,
                 endTime=candidate.endTime,
@@ -63,7 +63,7 @@ class Solver_Greedy(_Solver):
             ):
                 raise RuntimeError("Could not apply the selected assignment")
             timeId = candidate.endTime
-            print("Jumping to timeId:", timeId, "after assignment")
+            # print("Jumping to timeId:", timeId, "after assignment")
 
         if not solution.isAssignmentFeasible():
             solution.makeInfeasible()

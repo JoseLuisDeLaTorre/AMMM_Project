@@ -60,7 +60,8 @@ class Solution(_Solution):
     def isAssignmentFeasible(self):
         # Check profit threshold
         """  We cannot determinate the real profit yet, just at the end of the solution, maybe we can start all with 1
-        and then check if the profit is enough, this can be a future improvement.
+        and then check if the profit is enough, but this would complicate the max run - min run check, 
+        so we will just check the profit at the end of the solution.
         profit = 0.0
         for i in range(0, len(self.timePeriods)):
             profit += self.timePeriods[i].getProfit() * self.statuses[i]
@@ -76,11 +77,11 @@ class Solution(_Solution):
             if status:
                 runLength += 1
                 if runLength >= self.U:
-                    print(" - Max run exceeded")
+                    # print(" - Max run exceeded")
                     return False
             elif runLength:
                 if runLength < self.L:
-                    print(" - Min run too short")
+                    # print(" - Min run too short")
                     return False
                 runLength = 0
 
@@ -107,32 +108,14 @@ class Solution(_Solution):
         
         feasible = self.isAssignmentFeasible()
         rate = energy / profit if profit > 0 else float("inf")
-        print(
-            f"chain {initialTimeId}:{finalTimeId} feasible={feasible} "
-            f"E={energy:g} P={profit:g} rate={rate:.3g} statuses {self.statuses}"
-        )
+        # print(
+        #     f"chain {initialTimeId}:{finalTimeId} feasible={feasible} "
+        #     f"E={energy:g} P={profit:g} rate={rate:.3g} statuses {self.statuses}"
+        # )
         #revert changes
         self.statuses[initialTimeId:finalTimeId] = statesBackup
         return feasible
 
-
-    def isFeasibleToSetTimeON(self, timeId):
-        if not 0 <= timeId < len(self.statuses):
-            return False
-        previousStatus = self.statuses[timeId]
-        self.statuses[timeId] = 1
-        feasible = self.isAssignmentFeasible()
-        self.statuses[timeId] = previousStatus
-        return feasible
-
-    def isFeasibleToAssignOFF(self, timeId):
-        if not 0 <= timeId < len(self.statuses):
-            return False
-        previousStatus = self.statuses[timeId]
-        self.statuses[timeId] = 0
-        feasible = self.isAssignmentFeasible()
-        self.statuses[timeId] = previousStatus
-        return feasible
 
     def assign(self, startTime, endTime, status=1):
         if endTime > len(self.statuses):
@@ -170,17 +153,6 @@ class Solution(_Solution):
                         for t in range(timeId+l, timeId+u):
                             self.statuses[t] = 0
         return feasibleAssignments
-
-    def findBestFeasibleAssignment(self, timeId):
-        assignments = self.findFeasibleAssignments(timeId)
-        if not assignments:
-            return None
-
-        bestAssignment = assignments[0]
-        for assignment in assignments[1:]:
-            if assignment.energy < bestAssignment.energy:
-                bestAssignment = assignment
-        return bestAssignment
 
     def __str__(self):
         strSolution = 'z = %10.8f;\n' % self.fitness
