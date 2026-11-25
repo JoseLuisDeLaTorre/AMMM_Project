@@ -1,6 +1,6 @@
 # --- Common specific parameters ------------------------------------------------------------------------------
 inputDataFile        = Heuristics/data/example.dat;        # Input DAT file
-solutionFile         = solutions/example.sol;   # Output DAT file (solution)
+solutionFile         = Heuristics/solutions/example.sol;   # Output DAT file (solution)
 solver               = GRASP;                  # Supported solvers: Greedy / Random / GRASP / BRKGA
 maxExecTime          = 60;                      # Maximum execution time in seconds
 verbose              = True;                    # Verbose mode?

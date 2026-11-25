@@ -64,7 +64,7 @@ class Main:
                     raise AMMMException('Solver %s not supported.' % str(self.config.solver)) 
                 """
                 solution = solver.solve(solution=initialSolution)
-                print('Solution (CPUid: [TasksId]): %s' % str(solution.cpuIdToListTaskId))
+                print('Final Solution: %s' % str(solution))
                 solution.saveToFile(self.config.solutionFile)
             else:
                 print('Instance is infeasible.')
@@ -83,14 +83,10 @@ if __name__ == '__main__':
                         default=Path(__file__).parent / 'config/config.dat', help='specifies the config file')
     args = parser.parse_args()
 
-    print('Reading config file %s' % args.configFile)
-
-  
-    print( os.path.exists(args.configFile) )
-
     config = DATParser.parse(args.configFile)
     ValidateConfig.validate(config)
     inputData = DATParser.parse(config.inputDataFile)
+
     ValidateInputData.validate(inputData)
 
     if config.verbose:

@@ -34,13 +34,13 @@ def main():
     instance = TestInstance(config)
     solution = Solver_Greedy(config, instance).solve()
 
-    """     if not solution.isFeasible():
+    if not solution.isFeasible():
         raise AssertionError("Expected the completed schedule to be feasible")
-    if solution.statuses != [1, 1, 0, 0, 1, 1, 1, 0, 0, 0]:
-        raise AssertionError("Expected a skipped OFF period before the second run")
-    """
+    if solution.statuses != [1,1,0,1,1,1]:
+        raise AssertionError("expected solution not match")
+    
     print("Solution statuses:", solution.statuses)
-    print("Solution profit:", solution.fitness)
+    print("Solution fitness:", solution.fitness)
 
 
 if __name__ == "__main__":

@@ -27,7 +27,7 @@ class Solver_Greedy(_Solver):
 
     def _selectCandidate(self, candidateList):
         if self.config.solver == 'Greedy':
-            return min(candidateList, key=lambda candidate: candidate.energy)
+            return min(candidateList, key=lambda candidate: candidate.rate)
         return random.choice(candidateList)
 
     def construction(self):
@@ -36,25 +36,26 @@ class Solver_Greedy(_Solver):
 
         timeId = 0
         while timeId < len(timePeriods):
-            print("TIME ID --------------------", timeId)
             currentProfit = sum(
                 period.getProfit() * solution.statuses[index]
                 for index, period in enumerate(timePeriods)
             )
-            """
-                                     if currentProfit >= solution.T:
-                break """
 
             candidateList = solution.findFeasibleAssignments(timeId)
 
-            print(f"TimeId: {timeId}, CurrentProfit: {currentProfit}, CandidateList: {candidateList}")
             if not candidateList:
+                print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}: no candidate")
                 if not solution.assign(timeId, 0):
                     raise RuntimeError("Could not leave the current period OFF")
                 timeId += 1
                 continue
 
             candidate = self._selectCandidate(candidateList)
+            print(
+                f"t={timeId} profit={currentProfit:g}/{solution.T:g}: "
+                f"assign [{candidate.startTime}, {candidate.endTime}) "
+                f"rate={candidate.rate:.3g}"
+            )
             if not solution.assign(
                 startTime=candidate.startTime,
                 endTime=candidate.endTime,
@@ -62,6 +63,7 @@ class Solver_Greedy(_Solver):
             ):
                 raise RuntimeError("Could not apply the selected assignment")
             timeId = candidate.endTime
+            print("Jumping to timeId:", timeId, "after assignment")
 
         if not solution.isAssignmentFeasible():
             solution.makeInfeasible()
