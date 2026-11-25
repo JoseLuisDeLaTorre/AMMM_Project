@@ -97,6 +97,21 @@ class Solution(_Solution):
 
     # Check if is out of bounds, then check previous state
     # 
+
+    def isOnChainFeasible(self, initialTimeId, finalTimeId):
+        # save initial states 
+        statesBackup = self.statuses[initialTimeId:finalTimeId]
+        validation = True
+        for timeId in range(initialTimeId, finalTimeId):
+            if not self.isFeasibleToSetTimeON(timeId):
+                validation = False
+                break
+            self.statuses[timeId] = 1
+        #revert changes
+        self.statuses[initialTimeId:finalTimeId] = statesBackup
+        return validation
+
+
     def isFeasibleToSetTimeON(self, timeId):
         if not 0 <= timeId < len(self.statuses):
             return False
@@ -127,13 +142,52 @@ class Solution(_Solution):
 
     def findFeasibleAssignments(self, timeId):
         feasibleAssignments = []
-        previousStatus = self.statuses[timeId]
-        for status in (0, 1):
+        # The comparison will be done using a windows frame between 
+        # min L and max U
+        # S0, S1 ... SL
+        # ...
+        # S0 S1 ... SU
+        # S1 S2 ... SU
+        # All this will be evaluated as feasible in the iteration, next time
+        # will start at time i + k, being k the last time frime of the selected window
+
+        timeBlocks = []
+        timeEnergies = []
+        timeProfits = []
+        timeRatio = []
+
+
+        for l in range(0, self.L  ):
+            for u in range(self.L , self.L + self.U ):
+                if timeId+u < len(self.statuses)+1:
+
+                    timeBlocks.append((timeId+l, timeId+u))
+                    timeEnergies.append(sum(self.timePeriods[t].getEnergy() for t in range(timeId+l, timeId+u)))
+                    timeProfits.append(sum(self.timePeriods[t].getProfit() for t in range(timeId+l, timeId+u)))
+                    timeRatio.append(timeEnergies[-1]/timeProfits[-1] if timeProfits[-1] > 0 else float('inf'))
+                    if self.isOnChainFeasible(timeId+l, timeId+u):
+                        #Assign all the status from timeId+l to timeId+u as ON
+                        for t in range(timeId+l, timeId+u):
+                            self.statuses[t] = 1
+                            energy = self.timePeriods[t].getEnergy()
+                            #profit = self.timePeriods[t].getProfit()
+                            feasibleAssignments.append(Assignment(t, 1, energy))
+
+
+                        #Unassign all the status from timeId+l to timeId+u as OFF
+                        for t in range(timeId+l, timeId+u):
+                            self.statuses[t] = 0
+
+        print("Time blocks:", timeBlocks)
+        print("Time energies:", timeEnergies)
+        print("Time profits:", timeProfits)
+        print("Time ratio:", timeRatio)
+        """         for status in (0, 1):
             self.statuses[timeId] = status
             if self.isAssignmentFeasible():
                 energy = self.timePeriods[timeId].getEnergy() * status
                 feasibleAssignments.append(Assignment(timeId, status, energy))
-        self.statuses[timeId] = previousStatus
+        self.statuses[timeId] = previousStatus """
         return feasibleAssignments
 
     def findBestFeasibleAssignment(self, timeId):
