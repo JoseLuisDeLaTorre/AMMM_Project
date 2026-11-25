@@ -160,15 +160,17 @@ class Solution(_Solution):
 
         # S: decision variable containing the status of the machine
         statuses = self.statuses
-        # ON: decision variable containing the periods where the machine is turned on
-        turnedOn = self.getTurnedOn()
+        strSolution += 'ON intervals (start end, 1-based):\n'
+        startTime = None
+        for timeId in range(len(statuses)):
+            if statuses[timeId] == 1 and startTime is None:
+                startTime = timeId
+            elif statuses[timeId] == 0 and startTime is not None:
+                strSolution += f'{startTime + 1} {timeId}\n'
+                startTime = None
 
-        strSolution += 's = [ '
-        strSolution += ' '.join(str(status) for status in statuses)
-        strSolution += ' ];\n'
-        strSolution += 'on = [ '
-        strSolution += ' '.join(str(status) for status in turnedOn)
-        strSolution += ' ];\n'
+        if startTime is not None:
+            strSolution += f'{startTime + 1} {len(statuses)}\n'
 
         return strSolution
 

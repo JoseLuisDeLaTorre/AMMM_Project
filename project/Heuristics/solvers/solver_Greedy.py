@@ -40,6 +40,9 @@ class Solver_Greedy(_Solver):
                 period.getProfit() * solution.statuses[index]
                 for index, period in enumerate(timePeriods)
             )
+            print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}")
+            if currentProfit >= solution.T:
+                break
 
             candidateList = solution.findFeasibleAssignments(timeId)
 
@@ -83,18 +86,19 @@ class Solver_Greedy(_Solver):
         self.writeLogLine(float('inf'), 0)
 
         solution = self.construction()
-        print('Initial Solution: %s' % str(solution))
+
         if self.config.localSearch:
             print("IS local search")
             localSearch = LocalSearch(self.config, None)
             endTime = self.startTime + getattr(self.config, 'maxExecTime', float('inf'))
             solution = localSearch.solve(solution=solution, startTime=self.startTime, endTime=endTime)
-            print('Final Solution after Local Search: %s' % str(solution))
+
 
         self.elapsedEvalTime = time.time() - self.startTime
         self.writeLogLine(solution.getFitness(), 1)
         self.numSolutionsConstructed = 1
         self.printPerformance()
+
 
         return solution
 

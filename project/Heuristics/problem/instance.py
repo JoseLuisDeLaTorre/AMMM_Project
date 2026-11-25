@@ -27,14 +27,15 @@ class Instance(object):
     def __init__(self, config, inputData):
         self.config = config
         self.inputData = inputData
-        self.L = 3
-        self.U = 4
-        self.T = 1
+        print("----------------_",config, inputData)
+        self.L = inputData.L
+        self.U = inputData.U
+        self.T = inputData.T
         
-        nTimes =  10  #inputData.nTimes
+        nTimes =  inputData.N
 
-        P = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        E = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        P = inputData.P
+        E = inputData.E
 
         self.timePeriods = [None] * nTimes
         for tId in range(0, nTimes):
@@ -48,7 +49,12 @@ class Instance(object):
         return self.timePeriods
 
     def createSolution(self):
-        solution = Solution(self.timePeriods)
+        solution = Solution(
+            self.timePeriods,
+            minimumOnPeriods=self.L,
+            maximumOnPeriods=self.U,
+            minimumProfit=self.T,
+        )
         solution.setVerbose(self.config.verbose)
         return solution
 
