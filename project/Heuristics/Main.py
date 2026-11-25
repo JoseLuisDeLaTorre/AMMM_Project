@@ -46,7 +46,10 @@ class Main:
 
             if instance.checkInstance():
                 initialSolution = None
-                solver = Solver_Greedy(self.config, instance)
+                if self.config.solver == 'Greedy':
+                    solver = Solver_Greedy(self.config, instance)
+                else:
+                    raise AMMMException('Solver %s not supported.' % str(self.config.solver)) 
                 """                 
                 if self.config.solver == 'Greedy' or self.config.solver == 'Random':
                     solver = Solver_Greedy(self.config, instance)
@@ -60,8 +63,6 @@ class Main:
                     self.config.verbose = verbose
                     decoder = Decoder(self.config, instance)
                     solver = Solver_BRKGA(decoder, instance)
-                else:
-                    raise AMMMException('Solver %s not supported.' % str(self.config.solver)) 
                 """
                 solution = solver.solve(solution=initialSolution)
                 print('Final Solution: %s' % str(solution))

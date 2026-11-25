@@ -83,10 +83,13 @@ class Solver_Greedy(_Solver):
         self.writeLogLine(float('inf'), 0)
 
         solution = self.construction()
+        print('Initial Solution: %s' % str(solution))
         if self.config.localSearch:
+            print("IS local search")
             localSearch = LocalSearch(self.config, None)
-            endTime= self.startTime + self.config.maxExecTime
+            endTime = self.startTime + getattr(self.config, 'maxExecTime', float('inf'))
             solution = localSearch.solve(solution=solution, startTime=self.startTime, endTime=endTime)
+            print('Final Solution after Local Search: %s' % str(solution))
 
         self.elapsedEvalTime = time.time() - self.startTime
         self.writeLogLine(solution.getFitness(), 1)
