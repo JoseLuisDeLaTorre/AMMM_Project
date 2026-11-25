@@ -39,6 +39,10 @@ class InstanceGenerator(object):
         minEnergyPerInstance = self.config.minEnergyPerInstance
         maxEnergyPerInstance = self.config.maxEnergyPerInstance
 
+        L = self.config.L
+        U = self.config.U
+        T = self.config.T
+
         if not os.path.isdir(instancesDirectory):
             raise AMMMException('Directory(%s) does not exist' % instancesDirectory)
 
@@ -47,11 +51,13 @@ class InstanceGenerator(object):
             fInstance = open(instancePath, 'w')
 
             fInstance.write('N=%d;\n' % N)
-
-            L = random.randint(1, N)
+            
+            if L == 0:
+                L = random.randint(1, N)
             fInstance.write('L=%d;\n' % L)
 
-            U = random.randint(L, N)
+            if U == 0:
+                U = random.randint(L, N)
             fInstance.write('U=%d;\n' % U)
 
             max_t = 0
@@ -65,7 +71,8 @@ class InstanceGenerator(object):
                 E[i] = random.randint(minEnergyPerInstance, maxEnergyPerInstance)
     
 
-            T = random.randint(0, max_t)
+            if T == 0:
+                T = random.randint(0, max_t)
 
             fInstance.write('T=%d;\n' % T)
 

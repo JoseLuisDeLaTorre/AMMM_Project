@@ -1,11 +1,15 @@
-# file name: ../AMMMLabHeuristics/data/instance_XX.dat
 instancesDirectory = ../project/CPLEX_project/data;
-fileNamePrefix = small;
+fileNamePrefix = test_4000;
 fileNameExtension = dat;
 numInstances = 1;
 
-N = 10;
+N = 4000;
+
 minProfitPerInstance = 20;
 maxProfitPerInstance = 80;
 minEnergyPerInstance = 40;
 maxEnergyPerInstance = 80;
+
+L = 45;
+U = 75;
+T = 8000;

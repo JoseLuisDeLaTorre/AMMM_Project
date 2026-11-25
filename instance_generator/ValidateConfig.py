@@ -27,7 +27,8 @@ class ValidateConfig(object):
     def validate(data):
         # Validate that mandatory input parameters were found
         paramList = ['instancesDirectory', 'fileNamePrefix', 'fileNameExtension', 'numInstances',
-                      'N', 'minProfitPerInstance', 'maxProfitPerInstance', 'minEnergyPerInstance', 'maxEnergyPerInstance']
+                      'N', 'minProfitPerInstance', 'maxProfitPerInstance', 'minEnergyPerInstance', 'maxEnergyPerInstance',
+                      'L', 'U', 'T']
         for paramName in paramList:
             if paramName not in data.__dict__:
                 raise AMMMException('Parameter(%s) has not been not specified in Configuration' % str(paramName))
@@ -71,6 +72,22 @@ class ValidateConfig(object):
 
         if maxEnergyPerInstance < minEnergyPerInstance:
             raise AMMMException('maxEnergyPerInstance(%s) has to be >= minEnergyPerInstance(%s).' % (str(maxEnergyPerInstance), str(minEnergyPerInstance)))
+        
+        L = data.L
+        if not isinstance(L, int) or (L < 0):
+            raise AMMMException('L(%s) has to be a positive integer value.' % str(L))
+        
+        U = data.U
+        if not isinstance(U, int) or (U < 0): 
+            raise AMMMException('U(%s) has to be a positive integer value.' % str(U))
+        
+        if U < L:
+            raise AMMMException('U(%s) has to be >= L(%s).' % (str(U), str(L)))
+        
+        T = data.T
+        if not isinstance(T, int) or (T < 0):
+            raise AMMMException('T(%s) has to be a non-negative integer value.' % str(T))
+        
 
         """
         numCPUs = data.numCPUs

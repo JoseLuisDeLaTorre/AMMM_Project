@@ -1,12 +1,15 @@
-instancesDirectory = output;
-fileNamePrefix = test_gen;
+instancesDirectory = ../project/CPLEX_project/data;
+fileNamePrefix = test_4000;
 fileNameExtension = dat;
 numInstances = 1;
 
-N = 6;
+N = 4000;
 
-minProfitPerInstance = 1;
-maxProfitPerInstance = 10;
+minProfitPerInstance = 20;
+maxProfitPerInstance = 80;
+minEnergyPerInstance = 40;
+maxEnergyPerInstance = 80;
 
-minEnergyPerInstance = 1;
-maxEnergyPerInstance = 10;
+L = 45;
+U = 75;
+T = 8000;
