@@ -27,14 +27,15 @@ class Instance(object):
     def __init__(self, config, inputData):
         self.config = config
         self.inputData = inputData
-        self.L = 3
-        self.U = 4
-        self.T = 1
+        print("----------------_",config, inputData)
+        self.L = inputData.L
+        self.U = inputData.U
+        self.T = inputData.T
         
-        nTimes =  10  #inputData.nTimes
+        nTimes =  inputData.N
 
-        P = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        E = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        P = inputData.P
+        E = inputData.E
 
         self.timePeriods = [None] * nTimes
         for tId in range(0, nTimes):
@@ -48,7 +49,12 @@ class Instance(object):
         return self.timePeriods
 
     def createSolution(self):
-        solution = Solution(self.timePeriods)
+        solution = Solution(
+            self.timePeriods,
+            minimumOnPeriods=self.L,
+            maximumOnPeriods=self.U,
+            minimumProfit=self.T,
+        )
         solution.setVerbose(self.config.verbose)
         return solution
 
@@ -73,39 +79,4 @@ class Instance(object):
 
         return cond0 and cond1 and cond2
 
-           
-"""
-maxLengthChain = 0.0  #consecutives ON
-minLengthChain = 0.0  #consecutives OFF
-for i in self.timePeriods:
-    profit += i.getProfit()
-    energy += i.getEnergy()
-    for j in self.timePeriods:
-        currentMaxLengthChain = 0.0
-        currentMinLengthChain = 0.0
-        if i.getId() < j.getId():
-            if i.getStatus() == 1 and j.getStatus() == 1:
-                currentMaxLengthChain += 1
-            elif i.getStatus() == 0 and j.getStatus() == 0:
-                currentMinLengthChain += 1
-        if currentMaxLengthChain > maxLengthChain:
-            maxLengthChain = currentMaxLengthChain
-        if currentMinLengthChain > minLengthChain:
-            minLengthChain = currentMinLengthChain
-
-            
-# Cannot be turned off without having L consecutive periods
-if minLengthChain < self.L:
-    return False
-
-# Cannot be on more than U consecutive periods
-if maxLengthChain > self.U:
-    return False
-
-# Minimum profit treshold T must be reached
-if profit < self.T:
-    return False
-
-# Must end being turned off
-if self.timePeriods[self.getNumTimePeriods()-1].getStatus() != 0:
-    return False """
+  

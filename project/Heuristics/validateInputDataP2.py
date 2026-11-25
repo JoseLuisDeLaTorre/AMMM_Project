@@ -27,38 +27,29 @@ from AMMMGlobals import AMMMException
 class ValidateInputData(object):
     @staticmethod
     def validate(data):
-        # Validate that all input parameters were found
-        for paramName in ['nTasks', 'nCPUs', 'rt', 'rc']:
+        # Validate that all scheduling parameters were found
+        for paramName in ('N', 'L', 'U', 'T', 'P', 'E'):
             if paramName not in data.__dict__:
                 raise AMMMException('Parameter/Set(%s) not contained in Input Data' % str(paramName))
 
-        # Validate nTasks
-        nTasks = data.nTasks
-        if not isinstance(nTasks, int) or (nTasks <= 0):
-            raise AMMMException('nTasks(%s) has to be a positive integer value.' % str(nTasks))
+        # Validate horizon and run lengths
+        for paramName in ('N', 'L', 'U'):
+            value = getattr(data, paramName)
+            if type(value) is not int or value <= 0:
+                raise AMMMException('%s(%s) has to be a positive integer.' % (paramName, value))
 
-        # Validate nCPUs
-        nCPUs = data.nCPUs
-        if not isinstance(nCPUs, int) or (nCPUs <= 0):
-            raise AMMMException('nCPUs(%s) has to be a positive integer value.' % str(nCPUs))
+        if not 1 <= data.L <= data.U <= data.N:
+            raise AMMMException('Run lengths must satisfy 1 <= L <= U <= N.')
 
-        # Validate rt
-        data.rt = list(data.rt)
-        rt = data.rt
-        if len(rt) != nTasks:
-            raise AMMMException('Size of rt(%d) does not match with value of nTasks(%d).' % (len(rt), nTasks))
+        if type(data.T) not in (int, float) or data.T < 0:
+            raise AMMMException('T(%s) has to be a non-negative number.' % data.T)
 
-        for value in rt:
-            if not isinstance(value, (int, float)) or (value < 0):
-                raise AMMMException('Invalid parameter value(%s) in rt. Should be a float greater or equal than zero.' % str(value))
-
-        # Validate rc
-        data.rc = list(data.rc)
-        rc = data.rc
-        if len(rc) != nCPUs:
-            raise AMMMException('Size of rc(%d) does not match with value of nCPUs(%d).' % (len(rc), nCPUs))
-
-        for value in rc:
-            if not isinstance(value, (int, float)) or (value < 0):
-                raise AMMMException('Invalid parameter value(%s) in rc. Should be a float greater or equal than zero.' % str(value))
+        # Validate per-period profit and energy vectors
+        for paramName in ('P', 'E'):
+            values = list(getattr(data, paramName))
+            if len(values) != data.N:
+                raise AMMMException('%s must have N(%s) values.' % (paramName, data.N))
+            if any(type(value) not in (int, float) or value < 0 for value in values):
+                raise AMMMException('%s values must be non-negative numbers.' % paramName)
+            setattr(data, paramName, values)
 

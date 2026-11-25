@@ -27,38 +27,49 @@ class Solver_Greedy(_Solver):
 
     def _selectCandidate(self, candidateList):
         if self.config.solver == 'Greedy':
-            # sort candidate assignments by highestLoad in ascending order
-            sortedCandidateList = sorted(candidateList, key=lambda x: x.highestLoad)
-            # choose assignment with minimum highest load
-            return sortedCandidateList[0]
+            return min(candidateList, key=lambda candidate: candidate.rate)
         return random.choice(candidateList)
 
     def construction(self):
-        # get an empty solution for the problem
         solution = self.instance.createSolution()
+        timePeriods = self.instance.getTimePeriods()
 
-        # get tasks and sort them by their total required resources in descending order
-        tasks = self.instance.getTasks()
-        sortedTasks = sorted(tasks, key=lambda t: t.getTotalResources(), reverse=True)
-
-
-        # for each task taken in sorted order
-        for task in sortedTasks:
-            taskId = task.getId()
-
-            # compute feasible assignments
-            candidateList = solution.findFeasibleAssignments(taskId)
-
-            # no candidate assignments => no feasible assignment found
-            if not candidateList:
-                solution.makeInfeasible()
+        timeId = 0
+        while timeId < len(timePeriods):
+            currentProfit = sum(
+                period.getProfit() * solution.statuses[index]
+                for index, period in enumerate(timePeriods)
+            )
+            print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}")
+            if currentProfit >= solution.T:
                 break
 
-            # select assignment
-            candidate = self._selectCandidate(candidateList)
+            candidateList = solution.findFeasibleAssignments(timeId)
 
-            # assign the current task to the CPU that resulted in a minimum highest load
-            solution.assign(taskId, candidate.cpuId)
+            if not candidateList:
+                # print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}: no candidate")
+                if not solution.assign(timeId, 0):
+                    raise RuntimeError("Could not leave the current period OFF")
+                timeId += 1
+                continue
+
+            candidate = self._selectCandidate(candidateList)
+            # print(
+            #     f"t={timeId} profit={currentProfit:g}/{solution.T:g}: "
+            #     f"assign [{candidate.startTime}, {candidate.endTime}) "
+            #     f"rate={candidate.rate:.3g}"
+            # )
+            if not solution.assign(
+                startTime=candidate.startTime,
+                endTime=candidate.endTime,
+                status=candidate.status,
+            ):
+                raise RuntimeError("Could not apply the selected assignment")
+            timeId = candidate.endTime
+            # print("Jumping to timeId:", timeId, "after assignment")
+
+        if not solution.isAssignmentFeasible():
+            solution.makeInfeasible()
 
         return solution
 
@@ -75,15 +86,19 @@ class Solver_Greedy(_Solver):
         self.writeLogLine(float('inf'), 0)
 
         solution = self.construction()
+
         if self.config.localSearch:
+            print("IS local search")
             localSearch = LocalSearch(self.config, None)
-            endTime= self.startTime + self.config.maxExecTime
+            endTime = self.startTime + getattr(self.config, 'maxExecTime', float('inf'))
             solution = localSearch.solve(solution=solution, startTime=self.startTime, endTime=endTime)
+
 
         self.elapsedEvalTime = time.time() - self.startTime
         self.writeLogLine(solution.getFitness(), 1)
         self.numSolutionsConstructed = 1
         self.printPerformance()
+
 
         return solution
 
