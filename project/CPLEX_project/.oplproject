@@ -12,7 +12,7 @@
             <ref name="config.ops" type="setting">
 			</ref>
             			
-            <ref name="data/test_500.dat" type="data">
+            <ref name="data/test_500__0.dat" type="data">
 			</ref>
             		
         </config>
@@ -25,7 +25,7 @@
             <ref name="config.ops" type="setting">
 			</ref>
             			
-            <ref name="data/test_2000.dat" type="data">
+            <ref name="data/test_1500__0.dat" type="data">
 			</ref>
             		
         </config>
@@ -38,7 +38,7 @@
             <ref name="config.ops" type="setting">
 			</ref>
             			
-            <ref name="data/test_4000.dat" type="data">
+            <ref name="data/test_2000__0.dat" type="data">
 			</ref>
             		
         </config>
@@ -51,7 +51,7 @@
             <ref name="sol_alt.mod" type="model">
 			</ref>
             			
-            <ref name="data/test_1000.dat" type="data">
+            <ref name="data/test_1000__0.dat" type="data">
 			</ref>
             		
         </config>
