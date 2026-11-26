@@ -46,7 +46,7 @@ class LocalSearch(_Solver):
         self.maxExecTime = config.maxExecTime
         super().__init__(config, instance)
 
-        if self.nhStrategy not in ("TaskExchange", "Reassignment"):
+        if self.nhStrategy not in ('PeriodExchange', 'Flip', 'Swap','FlipAndSwap'):
             raise AMMMException("Select a valid nh strat: %s" % self.nhStrategy)
         if self.policy not in ("FirstImprovement", "BestImprovement"):
             raise AMMMException("Select a valid policy: %s" % self.policy)
@@ -106,15 +106,29 @@ class LocalSearch(_Solver):
             bestFitness = neighbor.getFitness()
         return bestNeighbor
 
-    # Reassignment, flip the binary status one by one and check if it is feasible and if it is better
-    def exploreReassignment(self, solution):
+        
+    
+    def exploreReassignment(self,solution,doFlips,doSwaps):
+        moves = []
+        if doFlips: moves += self.getFlips(solution)
+        if doSwaps: moves += self.getSwaps(solution)
+        return self._explore(solution, moves)
+
+
+    #Flips a state in a given instant
+    def getFlips(self, solution):
         moves = []
         nsize = len(solution.statuses)
         
         for i in range(nsize):
             status = solution.statuses[i]
             moves.append(Move([i],[status],[1-status]))
-        return self._explore(solution, moves)
+        return moves
+
+    #Swaps 2 different instants states
+    def getSwaps(self, solution):
+        moves = []
+        nsize = len(solution.statuses)
 
         endsON = []
         endsOFF = []
@@ -149,7 +163,8 @@ class LocalSearch(_Solver):
                 move = Move([timeId1,timeId2],[1,0],[0,1])
                 moves.append(move)
 
-        return self._explore(solution, moves)
+        return moves
+
 
     # Exchange: obtain on periods and off periods
     #  for each on period take one off period and exchange them
@@ -176,7 +191,11 @@ class LocalSearch(_Solver):
     def exploreNeighborhood(self, solution):
         if self.nhStrategy == "TaskExchange":
             return self.exploreExchange(solution)
-        return self.exploreReassignment(solution)
+        if self.nhStrategy == "Flip":
+            return self.exploreReassignment(solution,True,False)
+        if self.nhStrategy == "Swap":
+            return self.exploreReassignment(solution,False,True)
+        return self.exploreReassignment(solution,True,True)
 
     def solve(self, **kwargs):
         incumbent = kwargs.get("solution")

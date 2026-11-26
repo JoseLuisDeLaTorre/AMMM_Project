@@ -1,7 +1,7 @@
 # --- Common specific parameters ------------------------------------------------------------------------------
 inputDataFile        = Heuristics/data/test_1000.dat;        # Input DAT file
 solutionFile         = Heuristics/solutions/test_GRASP_0.3_1000.sol;   # Output DAT file (solution)
-solver               = GRASP;                  # Supported solvers: Greedy / Random / GRASP / BRKGA
+solver               = Greedy;                  # Supported solvers: Greedy / Random / GRASP / BRKGA
 maxExecTime          = 60;                      # Maximum execution time in seconds
 verbose              = True;                    # Verbose mode?
 
@@ -14,7 +14,7 @@ alpha                = 0.3;                 # Alpha parameter for the GRASP solv
 
 # --- Local Search specific parameters ------------------------------------------------------------------------
 localSearch          = True;                # Enable local search?
-neighborhoodStrategy = TaskExchange;        # Supported Neighborhoods: TaskExchange
+neighborhoodStrategy = FlipAndSwap;        # Supported Neighborhoods: PeriodExchange,Flip,Swap,FlipAndSwap
 policy               = BestImprovement;    # Supported Policies: FirstImprovement / BestImprovement
 
 # --- BRKGA specific parameters -------------------------------------------------------------------------------

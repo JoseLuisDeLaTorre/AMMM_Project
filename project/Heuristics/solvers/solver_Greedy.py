@@ -83,8 +83,8 @@ class Solver_Greedy(_Solver):
         if localSearch is not None:
             self.config.localSearch = localSearch
 
+
         solution = self.construction()
-        
         self.writeLogLine(solution.getFitness(),1)
 
         if self.config.localSearch:
