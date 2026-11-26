@@ -104,16 +104,51 @@ class LocalSearch(_Solver):
 
             bestNeighbor = neighbor
             bestFitness = neighbor.getFitness()
-
         return bestNeighbor
 
     # Reassignment, flip the binary status one by one and check if it is feasible and if it is better
     def exploreReassignment(self, solution):
         moves = []
-        for timeId in range(len(solution.statuses)):
-            status = solution.statuses[timeId]
-            move = Move([timeId], [status], [1 - status])
-            moves.append(move)
+        nsize = len(solution.statuses)
+        
+        for i in range(nsize):
+            status = solution.statuses[i]
+            moves.append(Move([i],[status],[1-status]))
+        return self._explore(solution, moves)
+
+        endsON = []
+        endsOFF = []
+        middle = []
+        last_on = 0
+        for i in range(0,nsize+1):
+            if i == 0: prev = 0
+            else: prev = solution.statuses[i-1]
+            if i == nsize: cur = 0
+            else: cur = solution.statuses[i]
+            
+            if prev == 0 and cur == 1:
+                endsON.append(i)
+                if i != 0: endsOFF.append(i-1)
+                last_on = i
+            if prev == 1 and cur == 0:
+                endsON.append(i-1)
+                if i < nsize: endsOFF.append(i)
+
+                start = last_on
+                end = i-1
+                if end-start+1 <= 2*solution.L: continue
+                for j in range(start+solution.L, end-solution.L+1):
+                    middle.append(j)
+
+        candidatesON = endsON + middle
+        candidatesOFF = endsOFF
+
+        for timeId1 in candidatesON:
+            for timeId2 in candidatesOFF:
+
+                move = Move([timeId1,timeId2],[1,0],[0,1])
+                moves.append(move)
+
         return self._explore(solution, moves)
 
     # Exchange: obtain on periods and off periods

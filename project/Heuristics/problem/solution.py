@@ -128,6 +128,7 @@ class Solution(_Solution):
     def unassign(self, timeId):
         return self.assign(timeId, 0)
 
+
     def findFeasibleAssignments(self, timeId):
         feasibleAssignments = []
         for l in range(0, self.L):
