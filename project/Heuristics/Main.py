@@ -48,6 +48,8 @@ class Main:
                 initialSolution = None
                 if self.config.solver == 'Greedy':
                     solver = Solver_Greedy(self.config, instance)
+                elif self.config.solver == 'GRASP':
+                    solver = Solver_GRASP(self.config, instance)
                 else:
                     raise AMMMException('Solver %s not supported.' % str(self.config.solver)) 
                 """                 

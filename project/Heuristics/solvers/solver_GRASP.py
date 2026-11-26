@@ -28,18 +28,18 @@ class Solver_GRASP(_Solver):
 
     def _selectCandidate(self, candidateList, alpha):
 
-        # sort candidate assignments by highestLoad in ascending order
-        sortedCandidateList = sorted(candidateList, key=lambda x: x.highestLoad)
+        # sort candidate assignments by rate in ascending order
+        sortedCandidateList = sorted(candidateList, key=lambda candidate: candidate.rate)
         
         # compute boundary highest load as a function of the minimum and maximum highest loads and the alpha parameter
-        minHLoad = sortedCandidateList[0].highestLoad
-        maxHLoad = sortedCandidateList[-1].highestLoad
+        minHLoad = sortedCandidateList[0].rate
+        maxHLoad = sortedCandidateList[-1].rate
         boundaryHLoad = minHLoad + (maxHLoad - minHLoad) * alpha
         
         # find elements that fall into the RCL
         maxIndex = 0
         for candidate in sortedCandidateList:
-            if candidate.highestLoad <= boundaryHLoad:
+            if candidate.rate <= boundaryHLoad:
                 maxIndex += 1
 
         # create RCL and pick an element randomly
@@ -48,32 +48,46 @@ class Solver_GRASP(_Solver):
         return random.choice(rcl)          # pick a candidate from rcl at random
     
     def _greedyRandomizedConstruction(self, alpha):
-        # get an empty solution for the problem
         solution = self.instance.createSolution()
-        
-        # get tasks and sort them by their total required resources in descending order
-        tasks = self.instance.getTasks()
-        sortedTasks = sorted(tasks, key=lambda t: t.getTotalResources(), reverse=True)
+        timePeriods = self.instance.getTimePeriods()
 
-
-        # for each task taken in sorted order
-        for task in sortedTasks:
-            taskId = task.getId()
-            
-            # compute feasible assignments
-            candidateList = solution.findFeasibleAssignments(taskId)
-
-            # no candidate assignments => no feasible assignment found
-            if not candidateList:
-                solution.makeInfeasible()
+        timeId = 0
+        while timeId < len(timePeriods):
+            currentProfit = sum(
+                period.getProfit() * solution.statuses[index]
+                for index, period in enumerate(timePeriods)
+            )
+            print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}")
+            if currentProfit >= solution.T:
                 break
-            
-            # select an assignment
-            candidate = self._selectCandidate(candidateList, alpha)
 
-            # assign the current task to the CPU that resulted in a minimum highest load
-            solution.assign(taskId, candidate.cpuId)
-            
+            candidateList = solution.findFeasibleAssignments(timeId)
+
+            if not candidateList:
+                # print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}: no candidate")
+                if not solution.assign(timeId, 0):
+                    raise RuntimeError("Could not leave the current period OFF")
+                timeId += 1
+                continue
+
+            candidate = self._selectCandidate(candidateList, alpha)
+            # print(
+            #     f"t={timeId} profit={currentProfit:g}/{solution.T:g}: "
+            #     f"assign [{candidate.startTime}, {candidate.endTime}) "
+            #     f"rate={candidate.rate:.3g}"
+            # )
+            if not solution.assign(
+                startTime=candidate.startTime,
+                endTime=candidate.endTime,
+                status=candidate.status,
+            ):
+                raise RuntimeError("Could not apply the selected assignment")
+            timeId = candidate.endTime
+            # print("Jumping to timeId:", timeId, "after assignment")
+
+        if not solution.isAssignmentFeasible():
+            solution.makeInfeasible()
+
         return solution
     
     def stopCriteria(self):
