@@ -189,13 +189,15 @@ class LocalSearch(_Solver):
         return self._explore(solution, moves)
 
     def exploreNeighborhood(self, solution):
-        if self.nhStrategy == "TaskExchange":
+        if self.nhStrategy == "PeriodExchange":
             return self.exploreExchange(solution)
         if self.nhStrategy == "Flip":
-            return self.exploreReassignment(solution,True,False)
+            return self.exploreReassignment(solution, doFlips=True, doSwaps=False)
         if self.nhStrategy == "Swap":
-            return self.exploreReassignment(solution,False,True)
-        return self.exploreReassignment(solution,True,True)
+            return self.exploreReassignment(solution, doFlips=False, doSwaps=True)
+        if self.nhStrategy == "FlipAndSwap":
+            return self.exploreReassignment(solution, doFlips=True, doSwaps=True)
+        raise AMMMException("Select a valid strategy: %s" % self.nhStrategy)
 
     def solve(self, **kwargs):
         incumbent = kwargs.get("solution")

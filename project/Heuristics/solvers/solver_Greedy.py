@@ -31,35 +31,35 @@ class Solver_Greedy(_Solver):
         return random.choice(candidateList)
 
     def construction(self):
-        solution = self.instance.createSolution()
+        pre_solution = self.instance.createSolution()
         timePeriods = self.instance.getTimePeriods()
+        preselectedCandidates = []
 
         timeId = 0
         while timeId < len(timePeriods):
-            currentProfit = sum(
-                period.getProfit() * solution.statuses[index]
-                for index, period in enumerate(timePeriods)
-            )
-            print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}")
-            if currentProfit >= solution.T:
-                break
+            #Remove validation and let the algorithm to check all the time, and to gather all the candidates before choosing one
+            #if currentProfit >= solution.T:
+            #    break
 
-            candidateList = solution.findFeasibleAssignments(timeId)
+            candidateList = pre_solution.findFeasibleAssignments(timeId)
 
             if not candidateList:
                 # print(f"t={timeId} profit={currentProfit:g}/{solution.T:g}: no candidate")
-                if not solution.assign(timeId, 0):
+                if not pre_solution.assign(timeId, 0):
                     raise RuntimeError("Could not leave the current period OFF")
                 timeId += 1
                 continue
 
             candidate = self._selectCandidate(candidateList)
+            preselectedCandidates.append(candidate)
+
             # print(
             #     f"t={timeId} profit={currentProfit:g}/{solution.T:g}: "
             #     f"assign [{candidate.startTime}, {candidate.endTime}) "
             #     f"rate={candidate.rate:.3g}"
             # )
-            if not solution.assign(
+
+            if not pre_solution.assign(
                 startTime=candidate.startTime,
                 endTime=candidate.endTime,
                 status=candidate.status,
@@ -68,7 +68,22 @@ class Solver_Greedy(_Solver):
             timeId = candidate.endTime
             # print("Jumping to timeId:", timeId, "after assignment")
 
-        if not solution.isAssignmentFeasible():
+        # Now that we iterate for all the times, sort the list and select candidates until reched the min profit
+        preselectedCandidates.sort(key=lambda candidate: candidate.rate)
+        currentProfit = 0
+        solution = self.instance.createSolution()
+        for candidate in preselectedCandidates:
+            if not solution.assign(
+                startTime=candidate.startTime,
+                endTime=candidate.endTime,
+                status=candidate.status,
+            ):
+                raise RuntimeError("Could not apply the selected assignment")
+            currentProfit += candidate.profit
+            if currentProfit >= solution.T:
+                break
+
+        if currentProfit < solution.T or not solution.isAssignmentFeasible():
             solution.makeInfeasible()
 
         return solution

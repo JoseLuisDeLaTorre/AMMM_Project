@@ -61,3 +61,63 @@ Testing project/project.6.dat
 Energy consumption is 8
 OK
 ```
+
+
+--curret solution before the fix: 
+----------------_ <Heuristics.datParser.DATAttributes object at 0x10601e8e0> <Heuristics.datParser.DATAttributes object at 0x10601e520>
+Solving the Problem...
+cond0: True, cond1: True, cond2: True
+Elap. Time (s)   Obj. Value     Iterations
+t=0 profit=0/2000
+t=88 profit=2436/2000
+    0.20170426   2719.00000000              1
+IS local search
+    0.22603226   2719.00000000              1
+Evaluation Performance:
+  Num. solutions constructed 1
+  Total Eval. Time      0.2260301113128662 s
+  Avg. Time / solution 226.0301113128662 ms
+Final Solution: z = 2719.00000000;
+ON intervals (start end, 1-based):
+44 88
+
+mac@Danielas-MacBook-Air project % python3 -m Heuristics.Main----
+Solving the Problem...
+cond0: True, cond1: True, cond2: True
+Elap. Time (s)   Obj. Value     Iterations
+t=0 profit=0/1000
+t=45 profit=279/1000
+t=159 profit=716/1000
+t=274 profit=1123/1000
+    0.43173695   1053.00000000              1
+IS local search
+    0.76943588   942.00000000              1
+Evaluation Performance:
+  Num. solutions constructed 1
+  Total Eval. Time      0.7694339752197266 s
+  Avg. Time / solution 769.4339752197266 ms
+Final Solution: z = 942.00000000;
+ON intervals (start end, 1-based):
+1 45
+105 157
+201 273
+
+VS
+
+
+Solving the Problem...
+cond0: True, cond1: True, cond2: True
+Elap. Time (s)   Obj. Value     Iterations
+    0.76724505   850.00000000              1
+IS local search
+    0.79484010   847.00000000              1
+Evaluation Performance:
+  Num. solutions constructed 1
+  Total Eval. Time      0.7948381900787354 s
+  Avg. Time / solution 794.8381900787354 ms
+Final Solution: z = 847.00000000;
+ON intervals (start end, 1-based):
+1 45
+88 159
+303 347
+

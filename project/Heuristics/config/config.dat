@@ -1,5 +1,5 @@
 # --- Common specific parameters ------------------------------------------------------------------------------
-inputDataFile        = Heuristics/data/test_1000.dat;        # Input DAT file
+inputDataFile        = Heuristics/data/test_500.dat;        # Input DAT file
 solutionFile         = Heuristics/solutions/test_GRASP_0.3_1000.sol;   # Output DAT file (solution)
 solver               = Greedy;                  # Supported solvers: Greedy / Random / GRASP / BRKGA
 maxExecTime          = 60;                      # Maximum execution time in seconds
